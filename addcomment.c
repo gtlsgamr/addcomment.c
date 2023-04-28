@@ -1,30 +1,3 @@
-/*
-######################################################################
-First version written by Hitarth Thummar <hittarth91@gmail.com>.
-It used javascript to dynamically inject content into webpages.
-
-This is version two: It only creates a file, it is up to the website owner
-to insert the comments into the pages however they wish. I inject them during build time
-so no javascript is needed on user end to see comments.
-
-The GPLv3 License (GPLv3)
-
-Copyright (c) 2023 Hitarth Thummar
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -37,6 +10,7 @@ char from_hex(char ch) {
 }
 
 /* Returns a url-decoded version of str */
+/* IMPORTANT: be sure to free() the returned string after use */
 char *udcd(char *str) {
 	char *pstr = str, *buf = malloc(strlen(str) + 1), *pbuf = buf;
 	while (*pstr) {
@@ -87,7 +61,7 @@ int main(void)
 		return -1;
 	}
 
-	fprintf(fp,"\n{\"alias\": \"%s\"], \"url\": [\"%s\"], \"time\": [\"%s\"], \"body\": [\"%s\"]}\n",udcd(alias),udcd(url),udcd(time),udcd(body));
+	fprintf(fp,"\n{\"alias\": \"%s\", \"url\": \"%s\", \"time\": \"%s\", \"body\": \"%s\"},\n",udcd(alias),udcd(url),udcd(time),udcd(body));
 
 	fclose(fp); 
 
