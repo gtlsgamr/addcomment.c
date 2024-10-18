@@ -13,6 +13,9 @@ char from_hex(char ch) {
 /* IMPORTANT: be sure to free() the returned string after use */
 char *udcd(char *str) {
 	char *pstr = str, *buf = malloc(strlen(str) + 1), *pbuf = buf;
+	if (buf == NULL) {
+		return NULL;
+	}
 	while (*pstr) {
 		if (*pstr == '%') {
 			if (pstr[1] && pstr[2]) {
@@ -37,11 +40,14 @@ int main(void)
 	int InputLength = atoi(getenv("CONTENT_LENGTH") );
 	int r;
 
-	/*InputLength = min( InputLength, sizeof(Buffer)-1 );*/
+	if (InputLength >= sizeof(Buffer)) {
+		printf("ERROR: Input length exceeds buffer size");
+		return -1;
+	}
 
 	fread( Buffer, InputLength, 1, stdin );
 
-	r = sscanf(Buffer, "alias=%[^&]&url=%[^&]&time=%[^&]&body=%[^&]", alias, url, time, body);
+	r = sscanf(Buffer, "alias=%24[^&]&url=%499[^&]&time=%99[^&]&body=%4999[^&]", alias, url, time, body);
 
 	if(r!=4){
 		printf("ERROR");
@@ -61,7 +67,27 @@ int main(void)
 		return -1;
 	}
 
-	fprintf(fp,"\n{\"alias\": \"%s\", \"url\": \"%s\", \"time\": \"%s\", \"body\": \"%s\"},\n",udcd(alias),udcd(url),udcd(time),udcd(body));
+	char *decoded_alias = udcd(alias);
+	char *decoded_url = udcd(url);
+	char *decoded_time = udcd(time);
+	char *decoded_body = udcd(body);
+
+	if (decoded_alias == NULL || decoded_url == NULL || decoded_time == NULL || decoded_body == NULL) {
+		printf("ERROR: Memory allocation failed");
+		free(decoded_alias);
+		free(decoded_url);
+		free(decoded_time);
+		free(decoded_body);
+		fclose(fp);
+		return -1;
+	}
+
+	fprintf(fp,"\n{\"alias\": \"%s\", \"url\": \"%s\", \"time\": \"%s\", \"body\": \"%s\"},\n", decoded_alias, decoded_url, decoded_time, decoded_body);
+
+	free(decoded_alias);
+	free(decoded_url);
+	free(decoded_time);
+	free(decoded_body);
 
 	fclose(fp); 
 
